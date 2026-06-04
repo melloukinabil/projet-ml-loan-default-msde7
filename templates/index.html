@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prediction Defaut Pret Immobilier</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            color: #e0e0e0;
+        }
+        .container { max-width: 1100px; margin: 0 auto; padding: 20px; }
+        
+        header {
+            text-align: center;
+            padding: 30px 0;
+        }
+        header h1 {
+            font-size: 2em;
+            color: #fff;
+            margin-bottom: 8px;
+        }
+        header p { color: #aaa; font-size: 1em; }
+        
+        .card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        .form-group label {
+            font-size: 0.85em;
+            color: #aaa;
+            margin-bottom: 5px;
+        }
+        .form-group input, .form-group select {
+            padding: 10px 12px;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 8px;
+            background: rgba(255,255,255,0.08);
+            color: #fff;
+            font-size: 0.95em;
+            transition: border-color 0.3s;
+        }
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #4fc3f7;
+        }
+        
+        .btn-predict {
+            display: block;
+            width: 100%;
+            padding: 14px;
+            margin-top: 20px;
+            background: linear-gradient(135deg, #4fc3f7, #0288d1);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .btn-predict:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(79, 195, 247, 0.3);
+        }
+        
+        .result-box {
+            text-align: center;
+            padding: 30px;
+            border-radius: 16px;
+            margin-top: 20px;
+        }
+        .result-box.success {
+            background: rgba(39, 174, 96, 0.2);
+            border: 2px solid #27ae60;
+        }
+        .result-box.danger {
+            background: rgba(231, 76, 60, 0.2);
+            border: 2px solid #e74c3c;
+        }
+        .result-box h2 { font-size: 1.5em; margin-bottom: 10px; }
+        .result-box .proba {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .result-box.success .proba { color: #27ae60; }
+        .result-box.danger .proba { color: #e74c3c; }
+        
+        .progress-bar {
+            width: 100%;
+            height: 12px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 6px;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+        .progress-bar .fill {
+            height: 100%;
+            border-radius: 6px;
+            transition: width 1s ease;
+        }
+        .progress-bar .fill.green { background: linear-gradient(90deg, #27ae60, #2ecc71); }
+        .progress-bar .fill.red { background: linear-gradient(90deg, #e74c3c, #c0392b); }
+        
+        .stats-row {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 15px;
+        }
+        .stat { text-align: center; }
+        .stat .value { font-size: 1.3em; font-weight: bold; color: #4fc3f7; }
+        .stat .label { font-size: 0.8em; color: #aaa; }
+        
+        .error-box {
+            background: rgba(231, 76, 60, 0.15);
+            border: 1px solid #e74c3c;
+            border-radius: 10px;
+            padding: 15px;
+            color: #e74c3c;
+            margin-top: 15px;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            font-size: 0.85em;
+        }
+        
+        h3 { color: #4fc3f7; margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>&#x1F3E6; Prediction du Defaut de Pret Immobilier</h1>
+            <p>Modele ML entraine sur 148 670 dossiers de prets - Classification binaire</p>
+        </header>
+
+        <form method="POST" action="/predict">
+            <div class="card">
+                <h3>Informations du pret</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Annee</label>
+                        <select name="year">
+                            <option value="2019" {% if form_data and form_data.year == 2019 %}selected{% endif %}>2019</option>
+                            <option value="2020" {% if form_data and form_data.year == 2020 %}selected{% endif %}>2020</option>
+                            <option value="2021" {% if form_data and form_data.year == 2021 %}selected{% endif %}>2021</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Loan Limit</label>
+                        <select name="loan_limit">
+                            <option value="cf">Conforming (cf)</option>
+                            <option value="ncf">Non-conforming (ncf)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Genre</label>
+                        <select name="Gender">
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Joint">Joint</option>
+                            <option value="Sex Not Available">Non disponible</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Approbation anticipee</label>
+                        <select name="approv_in_adv">
+                            <option value="nopre">Non (nopre)</option>
+                            <option value="pre">Oui (pre)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Type de pret</label>
+                        <select name="loan_type">
+                            <option value="type1">Type 1</option>
+                            <option value="type2">Type 2</option>
+                            <option value="type3">Type 3</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Objectif du pret</label>
+                        <select name="loan_purpose">
+                            <option value="p1">P1</option>
+                            <option value="p2">P2</option>
+                            <option value="p3">P3</option>
+                            <option value="p4">P4</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Credit Worthiness</label>
+                        <select name="Credit_Worthiness">
+                            <option value="l1">L1 (bon)</option>
+                            <option value="l2">L2 (faible)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Open Credit</label>
+                        <select name="open_credit">
+                            <option value="nopc">Non (nopc)</option>
+                            <option value="opc">Oui (opc)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Business/Commercial</label>
+                        <select name="business_or_commercial">
+                            <option value="nob/c">Non (nob/c)</option>
+                            <option value="b/c">Oui (b/c)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Montant du pret ($)</label>
+                        <input type="number" name="loan_amount" value="{{ form_data.loan_amount if form_data else 200000 }}" min="10000" max="2000000" step="10000">
+                    </div>
+                    <div class="form-group">
+                        <label>Taux d'interet (%)</label>
+                        <input type="number" name="rate_of_interest" value="{{ form_data.rate_of_interest if form_data else 4.5 }}" min="0" max="15" step="0.1">
+                    </div>
+                    <div class="form-group">
+                        <label>Spread taux</label>
+                        <input type="number" name="Interest_rate_spread" value="{{ form_data.Interest_rate_spread if form_data else 0.5 }}" min="0" max="5" step="0.1">
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Informations financieres et propriete</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Frais initiaux ($)</label>
+                        <input type="number" name="Upfront_charges" value="{{ form_data.Upfront_charges if form_data else 500 }}" min="0" max="10000" step="100">
+                    </div>
+                    <div class="form-group">
+                        <label>Duree (mois)</label>
+                        <input type="number" name="term" value="{{ form_data.term if form_data else 360 }}" min="60" max="480" step="12">
+                    </div>
+                    <div class="form-group">
+                        <label>Amortissement negatif</label>
+                        <select name="Neg_ammortization">
+                            <option value="not_neg">Non</option>
+                            <option value="neg_amm">Oui</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Interet seulement</label>
+                        <select name="interest_only">
+                            <option value="not_int">Non</option>
+                            <option value="int_only">Oui</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Paiement forfaitaire</label>
+                        <select name="lump_sum_payment">
+                            <option value="not_lpsm">Non</option>
+                            <option value="lpsm">Oui</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Valeur du bien ($)</label>
+                        <input type="number" name="property_value" value="{{ form_data.property_value if form_data else 250000 }}" min="20000" max="5000000" step="10000">
+                    </div>
+                    <div class="form-group">
+                        <label>Type construction</label>
+                        <select name="construction_type">
+                            <option value="sb">Site-built (sb)</option>
+                            <option value="mh">Manufactured (mh)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Occupation</label>
+                        <select name="occupancy_type">
+                            <option value="pr">Residence principale (pr)</option>
+                            <option value="sr">Secondaire (sr)</option>
+                            <option value="ir">Investissement (ir)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Garanti par</label>
+                        <select name="Secured_by">
+                            <option value="home">Maison</option>
+                            <option value="land">Terrain</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Nombre d'unites</label>
+                        <select name="total_units">
+                            <option value="1U">1 Unite</option>
+                            <option value="2U">2 Unites</option>
+                            <option value="3U">3 Unites</option>
+                            <option value="4U">4 Unites</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Revenu ($)</label>
+                        <input type="number" name="income" value="{{ form_data.income if form_data else 5000 }}" min="500" max="1000000" step="500">
+                    </div>
+                    <div class="form-group">
+                        <label>Type de credit</label>
+                        <select name="credit_type">
+                            <option value="EXP">EXP</option>
+                            <option value="EQUI">EQUI</option>
+                            <option value="CRIF">CRIF</option>
+                            <option value="CIB">CIB</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Profil emprunteur</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Score de credit</label>
+                        <input type="number" name="Credit_Score" value="{{ form_data.Credit_Score if form_data else 700 }}" min="300" max="900" step="10">
+                    </div>
+                    <div class="form-group">
+                        <label>Credit co-emprunteur</label>
+                        <select name="co-applicant_credit_type">
+                            <option value="CIB">CIB</option>
+                            <option value="EXP">EXP</option>
+                            <option value="EQUI">EQUI</option>
+                            <option value="CRIF">CRIF</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Tranche d'age</label>
+                        <select name="age">
+                            <option value="<25">&lt; 25</option>
+                            <option value="25-34">25-34</option>
+                            <option value="35-44" selected>35-44</option>
+                            <option value="45-54">45-54</option>
+                            <option value="55-64">55-64</option>
+                            <option value="65-74">65-74</option>
+                            <option value=">74">&gt; 74</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Soumission</label>
+                        <select name="submission_of_application">
+                            <option value="to_inst">Institution (to_inst)</option>
+                            <option value="not_inst">Non institution (not_inst)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>LTV (%)</label>
+                        <input type="number" name="LTV" value="{{ form_data.LTV if form_data else 80 }}" min="0" max="200" step="1">
+                    </div>
+                    <div class="form-group">
+                        <label>Region</label>
+                        <select name="Region">
+                            <option value="North">North</option>
+                            <option value="south">South</option>
+                            <option value="central">Central</option>
+                            <option value="North-East">North-East</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Type de securite</label>
+                        <select name="Security_Type">
+                            <option value="direct">Direct</option>
+                            <option value="Indirectly">Indirect</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>DTIR (%)</label>
+                        <input type="number" name="dtir1" value="{{ form_data.dtir1 if form_data else 40 }}" min="0" max="100" step="1">
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-predict">&#x1F50D; Predire le risque de defaut</button>
+        </form>
+
+        {% if result %}
+        <div class="result-box {{ 'danger' if result.prediction == 1 else 'success' }}">
+            <h2>{{ '&#x26A0;&#xFE0F; DEFAUT PREDIT' if result.prediction == 1 else '&#x2705; PAS DE DEFAUT' }}</h2>
+            <p class="proba">{{ result.proba_default }}% de risque</p>
+            
+            <div class="progress-bar">
+                <div class="fill {{ 'red' if result.prediction == 1 else 'green' }}" style="width: {{ result.proba_default }}%"></div>
+            </div>
+            
+            <div class="stats-row">
+                <div class="stat">
+                    <div class="value">{{ result.proba_no_default }}%</div>
+                    <div class="label">Pas de defaut</div>
+                </div>
+                <div class="stat">
+                    <div class="value">{{ result.proba_default }}%</div>
+                    <div class="label">Defaut</div>
+                </div>
+                <div class="stat">
+                    <div class="value">{{ result.confidence }}%</div>
+                    <div class="label">Confiance</div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if error %}
+        <div class="error-box">
+            <strong>Erreur :</strong> {{ error }}
+        </div>
+        {% endif %}
+
+        <footer>
+            <p>Projet ML MSDE7 - EHTP - Pr. Fadil - 2025/2026</p>
+        </footer>
+    </div>
+</body>
+</html>
