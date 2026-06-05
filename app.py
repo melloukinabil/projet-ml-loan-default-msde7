@@ -50,9 +50,6 @@ if mode == "Saisie manuelle":
         loan_amount = st.number_input("Montant du pret ($)", min_value=10000, max_value=2000000, value=200000, step=10000)
     
     with col2:
-        rate_of_interest = st.number_input("Taux d'interet (%)", min_value=0.0, max_value=15.0, value=4.5, step=0.1)
-        interest_rate_spread = st.number_input("Spread taux d'interet", min_value=0.0, max_value=5.0, value=0.5, step=0.1)
-        upfront_charges = st.number_input("Frais initiaux ($)", min_value=0.0, max_value=10000.0, value=500.0, step=100.0)
         term = st.number_input("Duree du pret (mois)", min_value=60, max_value=480, value=360, step=12)
         neg_ammortization = st.selectbox("Amortissement negatif", ["not_neg", "neg_amm"])
         interest_only = st.selectbox("Interet seulement", ["not_int", "int_only"])
@@ -67,12 +64,12 @@ if mode == "Saisie manuelle":
         income = st.number_input("Revenu annuel ($)", min_value=500, max_value=1000000, value=5000, step=500)
         credit_type = st.selectbox("Type de credit", ["EXP", "EQUI", "CRIF", "CIB"])
         credit_score = st.number_input("Score de credit", min_value=300, max_value=900, value=700, step=10)
-        co_applicant_credit_type = st.selectbox("Type credit co-emprunteur", ["CIB", "EXP", "EQUI", "CRIF"])
+        co_applicant_credit_type = st.selectbox("Type credit co-emprunteur", ["CIB", "EXP"])
         age = st.selectbox("Tranche d'age", ["<25", "25-34", "35-44", "45-54", "55-64", "65-74", ">74"])
         submission_of_application = st.selectbox("Soumission", ["to_inst", "not_inst"])
         ltv = st.number_input("LTV (%)", min_value=0.0, max_value=200.0, value=80.0, step=1.0)
         region = st.selectbox("Region", ["North", "south", "central", "North-East"])
-        security_type = st.selectbox("Type de securite", ["direct", "Indirectly"])
+        security_type = st.selectbox("Type de securite", ["direct", "Indriect"])
         dtir1 = st.number_input("DTIR (%)", min_value=0.0, max_value=100.0, value=40.0, step=1.0)
 
     if st.button("\U0001F50D Predire le risque de defaut", type="primary"):
@@ -88,9 +85,6 @@ if mode == "Saisie manuelle":
             'open_credit': open_credit,
             'business_or_commercial': business_or_commercial,
             'loan_amount': loan_amount,
-            'rate_of_interest': rate_of_interest,
-            'Interest_rate_spread': interest_rate_spread,
-            'Upfront_charges': upfront_charges,
             'term': term,
             'Neg_ammortization': neg_ammortization,
             'interest_only': interest_only,
@@ -168,6 +162,10 @@ elif mode == "Upload CSV":
                 df_upload = df_upload.drop('ID', axis=1)
             if 'Status' in df_upload.columns:
                 df_upload = df_upload.drop('Status', axis=1)
+            # Supprimer colonnes leaky
+            for c in ['Interest_rate_spread', 'rate_of_interest', 'Upfront_charges']:
+                if c in df_upload.columns:
+                    df_upload = df_upload.drop(c, axis=1)
             
             # Traitement valeurs manquantes
             for col in numerical_cols:
