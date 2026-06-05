@@ -147,25 +147,43 @@ if mode == "Saisie manuelle":
         # Prediction
         prediction = model.predict(X_input)[0]
         proba = model.predict_proba(X_input)[0]
+        risque = proba[1] * 100
         
         st.markdown("---")
         st.subheader("Resultat de la prediction")
+        
+        # Interpretation du niveau de risque
+        if risque >= 75:
+            niveau = "Tres eleve"
+            couleur = "red"
+        elif risque >= 50:
+            niveau = "Eleve"
+            couleur = "orange"
+        elif risque >= 25:
+            niveau = "Modere"
+            couleur = "blue"
+        else:
+            niveau = "Faible"
+            couleur = "green"
         
         col_r1, col_r2 = st.columns(2)
         
         with col_r1:
             if prediction == 1:
-                st.error(f"\U000026A0\U0000FE0F **DEFAUT PREDIT** - Risque eleve de non-remboursement")
+                st.error(f"**DEFAUT PREDIT** - Le modele estime un risque **{niveau.lower()}** de non-remboursement")
             else:
-                st.success(f"\U00002705 **PAS DE DEFAUT** - Remboursement prevu normal")
+                st.success(f"**PAS DE DEFAUT** - Le modele estime un risque **{niveau.lower()}** de non-remboursement")
         
         with col_r2:
-            st.metric("Probabilite de defaut", f"{proba[1]*100:.1f}%")
-            st.metric("Confiance", f"{max(proba)*100:.1f}%")
+            st.metric("Risque de defaut", f"{risque:.1f}%")
+            st.caption(f"Niveau de risque : **{niveau}**")
         
-        # Barre de probabilite
+        # Barre de risque
         st.progress(float(proba[1]))
-        st.caption(f"Probabilites : Pas de defaut = {proba[0]*100:.1f}% | Defaut = {proba[1]*100:.1f}%")
+        if risque > 50:
+            st.caption(f"Le modele penche vers le defaut ({risque:.1f}%) mais la marge est {'faible' if risque < 60 else 'claire'}.")
+        else:
+            st.caption(f"Le modele penche vers le remboursement normal ({100-risque:.1f}% de confiance).")
 
 elif mode == "Upload CSV":
     st.subheader("Upload d'un fichier CSV")
