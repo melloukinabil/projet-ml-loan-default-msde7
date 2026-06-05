@@ -35,7 +35,7 @@
         </ul>
 
         <div class="tab-content">
-            <!-- ====================== FORMULAIRE COMPLET 28 CHAMPS ====================== -->
+            <!-- ====================== SAISIE MANUELLE (28 CHAMPS) ====================== -->
             <div class="tab-pane fade {% if mode != 'csv' %}show active{% endif %}" id="manual">
                 <div class="card">
                     <div class="card-header bg-primary text-white">
@@ -47,7 +47,7 @@
                                 <!-- Ligne 1 -->
                                 <div class="col-md-3">
                                     <label class="form-label">Année</label>
-                                    <select name="year" class="form-select" required>
+                                    <select name="year" class="form-select">
                                         <option value="2019">2019</option>
                                         <option value="2020" selected>2020</option>
                                         <option value="2021">2021</option>
@@ -56,15 +56,15 @@
                                 </div>
                                 <div class="col-md-3">
                                     <label class="form-label">Loan Limit</label>
-                                    <select name="loan_limit" class="form-select" required>
-                                        <option value="cf">cf</option>
+                                    <select name="loan_limit" class="form-select">
+                                        <option value="cf" selected>cf</option>
                                         <option value="ncf">ncf</option>
                                     </select>
                                 </div>
                                 <div class="col-md-3">
                                     <label class="form-label">Genre</label>
-                                    <select name="Gender" class="form-select" required>
-                                        <option value="Male">Male</option>
+                                    <select name="Gender" class="form-select">
+                                        <option value="Male" selected>Male</option>
                                         <option value="Female">Female</option>
                                         <option value="Joint">Joint</option>
                                         <option value="Sex Not Available">Sex Not Available</option>
@@ -72,7 +72,7 @@
                                 </div>
                                 <div class="col-md-3">
                                     <label class="form-label">Approbation anticipée</label>
-                                    <select name="approv_in_adv" class="form-select" required>
+                                    <select name="approv_in_adv" class="form-select">
                                         <option value="pre">pre</option>
                                         <option value="nopre" selected>nopre</option>
                                     </select>
@@ -81,7 +81,7 @@
                                 <!-- Ligne 2 -->
                                 <div class="col-md-3">
                                     <label class="form-label">Type de prêt</label>
-                                    <select name="loan_type" class="form-select" required>
+                                    <select name="loan_type" class="form-select">
                                         <option value="type1">type1</option>
                                         <option value="type2" selected>type2</option>
                                         <option value="type3">type3</option>
@@ -89,7 +89,7 @@
                                 </div>
                                 <div class="col-md-3">
                                     <label class="form-label">Objectif du prêt</label>
-                                    <select name="loan_purpose" class="form-select" required>
+                                    <select name="loan_purpose" class="form-select">
                                         <option value="p1">p1</option>
                                         <option value="p2" selected>p2</option>
                                         <option value="p3">p3</option>
@@ -98,14 +98,14 @@
                                 </div>
                                 <div class="col-md-3">
                                     <label class="form-label">Credit Worthiness</label>
-                                    <select name="Credit_Worthiness" class="form-select" required>
-                                        <option value="l1">l1</option>
+                                    <select name="Credit_Worthiness" class="form-select">
+                                        <option value="l1" selected>l1</option>
                                         <option value="l2">l2</option>
                                     </select>
                                 </div>
                                 <div class="col-md-3">
                                     <label class="form-label">Open Credit</label>
-                                    <select name="open_credit" class="form-select" required>
+                                    <select name="open_credit" class="form-select">
                                         <option value="nopc" selected>nopc</option>
                                         <option value="opc">opc</option>
                                     </select>
@@ -114,7 +114,7 @@
                                 <!-- Ligne 3 -->
                                 <div class="col-md-3">
                                     <label class="form-label">Business/Commercial</label>
-                                    <select name="business_or_commercial" class="form-select" required>
+                                    <select name="business_or_commercial" class="form-select">
                                         <option value="nob/c" selected>nob/c</option>
                                         <option value="b/c">b/c</option>
                                     </select>
@@ -129,7 +129,7 @@
                                 </div>
                                 <div class="col-md-3">
                                     <label class="form-label">Amortissement négatif</label>
-                                    <select name="Neg_ammortization" class="form-select" required>
+                                    <select name="Neg_ammortization" class="form-select">
                                         <option value="not_neg" selected>not_neg</option>
                                         <option value="neg_amm">neg_amm</option>
                                     </select>
@@ -138,14 +138,14 @@
                                 <!-- Ligne 4 -->
                                 <div class="col-md-3">
                                     <label class="form-label">Intérêt seulement</label>
-                                    <select name="interest_only" class="form-select" required>
+                                    <select name="interest_only" class="form-select">
                                         <option value="not_int" selected>not_int</option>
                                         <option value="int_only">int_only</option>
                                     </select>
                                 </div>
                                 <div class="col-md-3">
                                     <label class="form-label">Paiement forfaitaire</label>
-                                    <select name="lump_sum_payment" class="form-select" required>
+                                    <select name="lump_sum_payment" class="form-select">
                                         <option value="not_lpsm" selected>not_lpsm</option>
                                         <option value="lpsm">lpsm</option>
                                     </select>
@@ -156,7 +156,7 @@
                                 </div>
                                 <div class="col-md-3">
                                     <label class="form-label">Type construction</label>
-                                    <select name="construction_type" class="form-select" required>
+                                    <select name="construction_type" class="form-select">
                                         <option value="sb" selected>sb</option>
                                         <option value="mh">mh</option>
                                     </select>
@@ -165,7 +165,7 @@
                                 <!-- Ligne 5 -->
                                 <div class="col-md-3">
                                     <label class="form-label">Occupation</label>
-                                    <select name="occupancy_type" class="form-select" required>
+                                    <select name="occupancy_type" class="form-select">
                                         <option value="pr" selected>pr</option>
                                         <option value="sr">sr</option>
                                         <option value="ir">ir</option>
@@ -173,14 +173,14 @@
                                 </div>
                                 <div class="col-md-3">
                                     <label class="form-label">Garanti par</label>
-                                    <select name="Secured_by" class="form-select" required>
+                                    <select name="Secured_by" class="form-select">
                                         <option value="home" selected>home</option>
                                         <option value="land">land</option>
                                     </select>
                                 </div>
                                 <div class="col-md-3">
                                     <label class="form-label">Nombre d'unités</label>
-                                    <select name="total_units" class="form-select" required>
+                                    <select name="total_units" class="form-select">
                                         <option value="1U" selected>1U</option>
                                         <option value="2U">2U</option>
                                         <option value="3U">3U</option>
@@ -195,7 +195,7 @@
                                 <!-- Ligne 6 -->
                                 <div class="col-md-3">
                                     <label class="form-label">Type de crédit</label>
-                                    <select name="credit_type" class="form-select" required>
+                                    <select name="credit_type" class="form-select">
                                         <option value="EXP" selected>EXP</option>
                                         <option value="EQUI">EQUI</option>
                                         <option value="CRIF">CRIF</option>
@@ -207,15 +207,15 @@
                                     <input type="number" name="Credit_Score" class="form-control" value="700" required>
                                 </div>
                                 <div class="col-md-3">
-                                    <label class="form-label">Co-applicant Credit</label>
-                                    <select name="co-applicant_credit_type" class="form-select" required>
+                                    <label class="form-label">Co-applicant Credit Type</label>
+                                    <select name="co-applicant_credit_type" class="form-select">
                                         <option value="CIB" selected>CIB</option>
                                         <option value="EXP">EXP</option>
                                     </select>
                                 </div>
                                 <div class="col-md-3">
                                     <label class="form-label">Tranche d'âge</label>
-                                    <select name="age" class="form-select" required>
+                                    <select name="age" class="form-select">
                                         <option value="25-34" selected>25-34</option>
                                         <option value="<25"><25</option>
                                         <option value="35-44">35-44</option>
@@ -229,7 +229,7 @@
                                 <!-- Ligne 7 -->
                                 <div class="col-md-3">
                                     <label class="form-label">Soumission</label>
-                                    <select name="submission_of_application" class="form-select" required>
+                                    <select name="submission_of_application" class="form-select">
                                         <option value="to_inst" selected>to_inst</option>
                                         <option value="not_inst">not_inst</option>
                                     </select>
@@ -240,7 +240,7 @@
                                 </div>
                                 <div class="col-md-3">
                                     <label class="form-label">Région</label>
-                                    <select name="Region" class="form-select" required>
+                                    <select name="Region" class="form-select">
                                         <option value="North" selected>North</option>
                                         <option value="south">south</option>
                                         <option value="central">central</option>
@@ -249,7 +249,7 @@
                                 </div>
                                 <div class="col-md-3">
                                     <label class="form-label">Type de sécurité</label>
-                                    <select name="Security_Type" class="form-select" required>
+                                    <select name="Security_Type" class="form-select">
                                         <option value="direct" selected>direct</option>
                                         <option value="Indriect">Indriect</option>
                                     </select>
