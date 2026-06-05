@@ -2,6 +2,8 @@ from flask import Flask, render_template, request, jsonify
 import pandas as pd
 import numpy as np
 import pickle
+import os
+os.environ['PYTHONIOENCODING'] = 'utf-8'
 
 app = Flask(__name__)
 
