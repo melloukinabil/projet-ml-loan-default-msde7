@@ -3,126 +3,251 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prédiction Défaut Prêt - EHTP</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <title>Prédiction Défaut Prêt Immobilier | EHTP</title>
     <style>
-        body { background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); }
-        .card { border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
-        .btn-primary { background: linear-gradient(45deg, #0d6efd, #6610f2); border: none; font-weight: bold; }
-        .result-default { background-color: #f8d7da; color: #842029; }
-        .result-ok { background-color: #d1e7dd; color: #0f5132; }
+        :root {
+            --primary: #1e40af;
+            --primary-light: #3b82f6;
+            --success: #10b981;
+            --danger: #ef4444;
+            --gray: #6b7280;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #e0f2fe 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+            padding: 35px 40px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.2rem;
+            margin-bottom: 8px;
+        }
+
+        header p {
+            opacity: 0.95;
+            font-size: 1.1rem;
+        }
+
+        .form-container {
+            padding: 40px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 25px;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #374151;
+            font-size: 0.95rem;
+        }
+
+        select, input[type="number"] {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        select:focus, input[type="number"]:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.15);
+        }
+
+        button {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+            padding: 16px 40px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 25px;
+            transition: all 0.3s;
+            box-shadow: 0 10px 20px rgba(30, 64, 175, 0.3);
+        }
+
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 25px rgba(30, 64, 175, 0.4);
+        }
+
+        .result {
+            margin-top: 35px;
+            padding: 30px;
+            border-radius: 16px;
+            text-align: center;
+            font-size: 1.1rem;
+        }
+
+        .success {
+            background: #ecfdf5;
+            border: 2px solid var(--success);
+            color: #065f46;
+        }
+
+        .danger {
+            background: #fef2f2;
+            border: 2px solid var(--danger);
+            color: #991b1b;
+        }
+
+        .error {
+            background: #fef2f2;
+            color: var(--danger);
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 6px solid var(--danger);
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: var(--gray);
+            font-size: 0.9rem;
+            border-top: 1px solid #f3f4f6;
+        }
     </style>
 </head>
-<body class="py-5">
+<body>
     <div class="container">
-        <div class="text-center mb-5">
-            <h1 class="display-5 fw-bold text-primary">Prédiction du Défaut de Remboursement</h1>
-            <p class="lead">Modèle XGBoost - Projet MSDE7 | EHTP</p>
-        </div>
+        <header>
+            <h1>Prédiction du Défaut de Remboursement</h1>
+            <p>Modèle XGBoost • Projet MSDE7 | Ecole Hassania des Travaux Publics</p>
+        </header>
 
-        <ul class="nav nav-pills nav-fill mb-4" id="myTab" role="tablist">
-            <li class="nav-item">
-                <button class="nav-link {% if mode != 'csv' %}active{% endif %}" data-bs-toggle="tab" data-bs-target="#manual">Saisie Manuelle</button>
-            </li>
-            <li class="nav-item">
-                <button class="nav-link {% if mode == 'csv' %}active{% endif %}" data-bs-toggle="tab" data-bs-target="#csv">Upload CSV</button>
-            </li>
-        </ul>
+        <div class="form-container">
+            <form action="/predict" method="POST">
+                <div class="grid">
+                    <!-- Colonne 1 -->
+                    <div>
+                        <div class="form-group">
+                            <label>Année</label>
+                            <select name="year">
+                                {% for y in [2019,2020,2021,2022,2023,2024] %}
+                                    <option value="{{ y }}" {% if form_data and form_data.year == y %}selected{% endif %}>{{ y }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
 
-        <div class="tab-content">
-            <!-- SAISIE MANUELLE -->
-            <div class="tab-pane fade {% if mode != 'csv' %}show active{% endif %}" id="manual">
-                <div class="card">
-                    <div class="card-header bg-primary text-white">
-                        <h5>Informations du Dossier</h5>
+                        <div class="form-group">
+                            <label>Loan Limit</label>
+                            <select name="loan_limit">
+                                <option value="cf" {% if form_data and form_data.loan_limit == 'cf' %}selected{% endif %}>cf</option>
+                                <option value="ncf" {% if form_data and form_data.loan_limit == 'ncf' %}selected{% endif %}>ncf</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Genre</label>
+                            <select name="Gender">
+                                <option value="Male" {% if form_data and form_data.Gender == 'Male' %}selected{% endif %}>Male</option>
+                                <option value="Female" {% if form_data and form_data.Gender == 'Female' %}selected{% endif %}>Female</option>
+                                <option value="Sex Not Available" {% if form_data and form_data.Gender == 'Sex Not Available' %}selected{% endif %}>Sex Not Available</option>
+                                <option value="Joint" {% if form_data and form_data.Gender == 'Joint' %}selected{% endif %}>Joint</option>
+                            </select>
+                        </div>
                     </div>
-                    <div class="card-body">
-                        <form method="POST">
-                            <div class="row g-3">
-                                <!-- Exemple pour un champ (à répéter pour tous) -->
-                                <div class="col-md-3">
-                                    <label>Année</label>
-                                    <select name="year" class="form-select">
-                                        <option value="2019" {% if form_data.year == '2019' %}selected{% endif %}>2019</option>
-                                        <option value="2020" {% if form_data.year == '2020' or not form_data %}selected{% endif %}>2020</option>
-                                        <option value="2021" {% if form_data.year == '2021' %}selected{% endif %}>2021</option>
-                                        <option value="2022" {% if form_data.year == '2022' %}selected{% endif %}>2022</option>
-                                    </select>
-                                </div>
 
-                                <div class="col-md-3">
-                                    <label>Loan Limit</label>
-                                    <select name="loan_limit" class="form-select">
-                                        <option value="cf" {% if form_data.loan_limit == 'cf' or not form_data %}selected{% endif %}>cf</option>
-                                        <option value="ncf" {% if form_data.loan_limit == 'ncf' %}selected{% endif %}>ncf</option>
-                                    </select>
-                                </div>
+                    <!-- Colonne 2 -->
+                    <div>
+                        <div class="form-group">
+                            <label>Type de prêt</label>
+                            <select name="loan_type">
+                                <option value="type1" {% if form_data and form_data.loan_type == 'type1' %}selected{% endif %}>type1</option>
+                                <option value="type2" {% if form_data and form_data.loan_type == 'type2' %}selected{% endif %}>type2</option>
+                                <option value="type3" {% if form_data and form_data.loan_type == 'type3' %}selected{% endif %}>type3</option>
+                            </select>
+                        </div>
 
-                                <div class="col-md-3">
-                                    <label>Genre</label>
-                                    <select name="Gender" class="form-select">
-                                        <option value="Male" {% if form_data.Gender == 'Male' or not form_data %}selected{% endif %}>Male</option>
-                                        <option value="Female" {% if form_data.Gender == 'Female' %}selected{% endif %}>Female</option>
-                                        <option value="Joint" {% if form_data.Gender == 'Joint' %}selected{% endif %}>Joint</option>
-                                        <option value="Sex Not Available" {% if form_data.Gender == 'Sex Not Available' %}selected{% endif %}>Sex Not Available</option>
-                                    </select>
-                                </div>
+                        <div class="form-group">
+                            <label>Montant du prêt ($)</label>
+                            <input type="number" name="loan_amount" value="{{ form_data.loan_amount if form_data else 200000 }}" required>
+                        </div>
 
-                                <!-- Montant du prêt -->
-                                <div class="col-md-3">
-                                    <label>Montant du prêt ($)</label>
-                                    <input type="number" name="loan_amount" class="form-control" 
-                                           value="{{ form_data.loan_amount|default(200000) }}" required>
-                                </div>
-
-                                <!-- Ajoute les autres champs de la même manière... -->
-
-                                <div class="col-12 mt-4">
-                                    <button type="submit" class="btn btn-primary btn-lg w-100">
-                                        Prédire le Risque de Défaut
-                                    </button>
-                                </div>
-                            </div>
-                        </form>
+                        <div class="form-group">
+                            <label>Durée (mois)</label>
+                            <input type="number" name="term" value="{{ form_data.term if form_data else 360 }}" required>
+                        </div>
                     </div>
-                </div>
-            </div>
 
-            <!-- CSV -->
-            <div class="tab-pane fade {% if mode == 'csv' %}show active{% endif %}" id="csv">
-                <div class="card">
-                    <div class="card-body text-center py-5">
-                        <form method="POST" enctype="multipart/form-data">
-                            <input type="file" name="file" class="form-control mb-3" accept=".csv" required>
-                            <button type="submit" class="btn btn-success btn-lg">Lancer les Prédictions</button>
-                        </form>
+                    <!-- Colonne 3 -->
+                    <div>
+                        <div class="form-group">
+                            <label>Score de crédit</label>
+                            <input type="number" name="Credit_Score" value="{{ form_data.Credit_Score if form_data else 700 }}" min="300" max="900" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>LTV (%)</label>
+                            <input type="number" step="0.1" name="LTV" value="{{ form_data.LTV if form_data else 80.0 }}" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>DTIR (%)</label>
+                            <input type="number" step="0.1" name="dtir1" value="{{ form_data.dtir1 if form_data else 40.0 }}" required>
+                        </div>
                     </div>
                 </div>
+
+                <button type="submit">🔍 Prédire le Risque de Défaut</button>
+            </form>
+
+            {% if result %}
+            <div class="result {% if result.prediction == 1 %}danger{% else %}success{% endif %}">
+                <h2>{{ result.label }}</h2>
+                <h1 style="font-size: 3rem; margin: 15px 0;">{{ result.proba_default }}%</h1>
+                <p><strong>Niveau de risque :</strong> {{ result.risque_niveau }}</p>
             </div>
-        </div>
+            {% endif %}
 
-        <!-- Résultats -->
-        {% if result %}
-        <div class="card mt-4 {{ 'result-default' if result.prediction == 1 else 'result-ok' }}">
-            <div class="card-body text-center">
-                <h2>{% if result.prediction == 1 %}⚠️ DÉFAUT PRÉDIT{% else %}✅ PAS DE DÉFAUT{% endif %}</h2>
-                <h1 class="display-3 fw-bold">{{ result.risque }}%</h1>
-                <p>Niveau : <strong>{{ result.niveau }}</strong></p>
+            {% if error %}
+            <div class="error">
+                <strong>Erreur :</strong> {{ error }}
             </div>
+            {% endif %}
         </div>
-        {% endif %}
 
-        {% if results %}
-        <div class="card mt-4">
-            <div class="card-header"><h5>Résultats CSV</h5></div>
-            <div class="card-body table-responsive">{{ results | safe }}</div>
-        </div>
-        {% endif %}
-
-        {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+        <footer>
+            Projet Machine Learning MSDE7 — Pr. Fadil — EHTP 2025/2026
+        </footer>
     </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
