@@ -10,147 +10,86 @@
             --primary-light: #3b82f6;
             --success: #10b981;
             --danger: #ef4444;
-            --gray: #6b7280;
         }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', system-ui, sans-serif;
             background: linear-gradient(135deg, #f8fafc 0%, #e0f2fe 100%);
             min-height: 100vh;
             padding: 20px;
         }
-
         .container {
-            max-width: 1200px;
+            max-width: 1300px;
             margin: 0 auto;
             background: white;
             border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
             overflow: hidden;
         }
-
         header {
             background: linear-gradient(135deg, var(--primary), var(--primary-light));
             color: white;
-            padding: 35px 40px;
+            padding: 30px;
             text-align: center;
         }
-
-        header h1 {
-            font-size: 2.2rem;
-            margin-bottom: 8px;
-        }
-
-        header p {
-            opacity: 0.95;
-            font-size: 1.1rem;
-        }
-
-        .form-container {
-            padding: 40px;
-        }
-
+        header h1 { font-size: 2.3rem; margin-bottom: 8px; }
+        .form-container { padding: 40px; }
         .grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
             gap: 25px;
         }
-
         .form-group {
-            margin-bottom: 18px;
+            margin-bottom: 16px;
         }
-
         label {
             display: block;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             font-weight: 600;
             color: #374151;
-            font-size: 0.95rem;
         }
-
         select, input[type="number"] {
             width: 100%;
-            padding: 12px 16px;
+            padding: 12px 15px;
             border: 2px solid #e5e7eb;
-            border-radius: 12px;
+            border-radius: 10px;
             font-size: 1rem;
-            transition: all 0.3s;
         }
-
-        select:focus, input[type="number"]:focus {
+        select:focus, input:focus {
             border-color: var(--primary);
             outline: none;
-            box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.15);
+            box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.2);
         }
-
         button {
             background: linear-gradient(135deg, var(--primary), var(--primary-light));
             color: white;
-            padding: 16px 40px;
-            font-size: 1.1rem;
+            padding: 16px;
+            font-size: 1.15rem;
             font-weight: 600;
             border: none;
             border-radius: 12px;
             cursor: pointer;
             width: 100%;
-            margin-top: 25px;
-            transition: all 0.3s;
-            box-shadow: 0 10px 20px rgba(30, 64, 175, 0.3);
+            margin-top: 30px;
         }
-
-        button:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 15px 25px rgba(30, 64, 175, 0.4);
-        }
-
+        button:hover { transform: translateY(-2px); }
         .result {
             margin-top: 35px;
             padding: 30px;
             border-radius: 16px;
             text-align: center;
-            font-size: 1.1rem;
+            font-size: 1.2rem;
         }
-
-        .success {
-            background: #ecfdf5;
-            border: 2px solid var(--success);
-            color: #065f46;
-        }
-
-        .danger {
-            background: #fef2f2;
-            border: 2px solid var(--danger);
-            color: #991b1b;
-        }
-
-        .error {
-            background: #fef2f2;
-            color: var(--danger);
-            padding: 20px;
-            border-radius: 12px;
-            border-left: 6px solid var(--danger);
-        }
-
-        footer {
-            text-align: center;
-            padding: 20px;
-            color: var(--gray);
-            font-size: 0.9rem;
-            border-top: 1px solid #f3f4f6;
-        }
+        .success { background: #ecfdf5; border: 2px solid var(--success); color: #065f46; }
+        .danger { background: #fef2f2; border: 2px solid var(--danger); color: #991b1b; }
+        .error { background: #fef2f2; color: var(--danger); padding: 20px; border-radius: 12px; }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
             <h1>Prédiction du Défaut de Remboursement</h1>
-            <p>Modèle XGBoost • Projet MSDE7 | Ecole Hassania des Travaux Publics</p>
+            <p>Modèle XGBoost — Projet MSDE7 | EHTP</p>
         </header>
 
         <div class="form-container">
@@ -161,12 +100,9 @@
                         <div class="form-group">
                             <label>Année</label>
                             <select name="year">
-                                {% for y in [2019,2020,2021,2022,2023,2024] %}
-                                    <option value="{{ y }}" {% if form_data and form_data.year == y %}selected{% endif %}>{{ y }}</option>
-                                {% endfor %}
+                                {% for y in [2019,2020,2021,2022,2023,2024] %}<option value="{{ y }}" {% if form_data and form_data.year == y %}selected{% endif %}>{{ y }}</option>{% endfor %}
                             </select>
                         </div>
-
                         <div class="form-group">
                             <label>Loan Limit</label>
                             <select name="loan_limit">
@@ -174,7 +110,6 @@
                                 <option value="ncf" {% if form_data and form_data.loan_limit == 'ncf' %}selected{% endif %}>ncf</option>
                             </select>
                         </div>
-
                         <div class="form-group">
                             <label>Genre</label>
                             <select name="Gender">
@@ -184,10 +119,13 @@
                                 <option value="Joint" {% if form_data and form_data.Gender == 'Joint' %}selected{% endif %}>Joint</option>
                             </select>
                         </div>
-                    </div>
-
-                    <!-- Colonne 2 -->
-                    <div>
+                        <div class="form-group">
+                            <label>Approbation anticipée</label>
+                            <select name="approv_in_adv">
+                                <option value="pre" {% if form_data and form_data.approv_in_adv == 'pre' %}selected{% endif %}>pre</option>
+                                <option value="nopre" {% if form_data and form_data.approv_in_adv == 'nopre' %}selected{% endif %}>nopre</option>
+                            </select>
+                        </div>
                         <div class="form-group">
                             <label>Type de prêt</label>
                             <select name="loan_type">
@@ -196,33 +134,66 @@
                                 <option value="type3" {% if form_data and form_data.loan_type == 'type3' %}selected{% endif %}>type3</option>
                             </select>
                         </div>
+                    </div>
 
+                    <!-- Colonne 2 -->
+                    <div>
+                        <div class="form-group">
+                            <label>Objectif du prêt</label>
+                            <select name="loan_purpose">
+                                <option value="p1" {% if form_data and form_data.loan_purpose == 'p1' %}selected{% endif %}>p1</option>
+                                <option value="p2" {% if form_data and form_data.loan_purpose == 'p2' %}selected{% endif %}>p2</option>
+                                <option value="p3" {% if form_data and form_data.loan_purpose == 'p3' %}selected{% endif %}>p3</option>
+                                <option value="p4" {% if form_data and form_data.loan_purpose == 'p4' %}selected{% endif %}>p4</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Credit Worthiness</label>
+                            <select name="Credit_Worthiness">
+                                <option value="l1" {% if form_data and form_data.Credit_Worthiness == 'l1' %}selected{% endif %}>l1</option>
+                                <option value="l2" {% if form_data and form_data.Credit_Worthiness == 'l2' %}selected{% endif %}>l2</option>
+                            </select>
+                        </div>
                         <div class="form-group">
                             <label>Montant du prêt ($)</label>
                             <input type="number" name="loan_amount" value="{{ form_data.loan_amount if form_data else 200000 }}" required>
                         </div>
-
                         <div class="form-group">
-                            <label>Durée (mois)</label>
+                            <label>Durée du prêt (mois)</label>
                             <input type="number" name="term" value="{{ form_data.term if form_data else 360 }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Valeur du bien ($)</label>
+                            <input type="number" name="property_value" value="{{ form_data.property_value if form_data else 250000 }}">
                         </div>
                     </div>
 
                     <!-- Colonne 3 -->
                     <div>
                         <div class="form-group">
-                            <label>Score de crédit</label>
-                            <input type="number" name="Credit_Score" value="{{ form_data.Credit_Score if form_data else 700 }}" min="300" max="900" required>
+                            <label>Revenu annuel ($)</label>
+                            <input type="number" name="income" value="{{ form_data.income if form_data else 5000 }}">
                         </div>
-
+                        <div class="form-group">
+                            <label>Score de crédit</label>
+                            <input type="number" name="Credit_Score" value="{{ form_data.Credit_Score if form_data else 700 }}" min="300" max="900">
+                        </div>
                         <div class="form-group">
                             <label>LTV (%)</label>
-                            <input type="number" step="0.1" name="LTV" value="{{ form_data.LTV if form_data else 80.0 }}" required>
+                            <input type="number" step="0.1" name="LTV" value="{{ form_data.LTV if form_data else 80.0 }}">
                         </div>
-
                         <div class="form-group">
                             <label>DTIR (%)</label>
-                            <input type="number" step="0.1" name="dtir1" value="{{ form_data.dtir1 if form_data else 40.0 }}" required>
+                            <input type="number" step="0.1" name="dtir1" value="{{ form_data.dtir1 if form_data else 40.0 }}">
+                        </div>
+                        <div class="form-group">
+                            <label>Région</label>
+                            <select name="Region">
+                                <option value="North" {% if form_data and form_data.Region == 'North' %}selected{% endif %}>North</option>
+                                <option value="south" {% if form_data and form_data.Region == 'south' %}selected{% endif %}>south</option>
+                                <option value="central" {% if form_data and form_data.Region == 'central' %}selected{% endif %}>central</option>
+                                <option value="North-East" {% if form_data and form_data.Region == 'North-East' %}selected{% endif %}>North-East</option>
+                            </select>
                         </div>
                     </div>
                 </div>
@@ -233,21 +204,15 @@
             {% if result %}
             <div class="result {% if result.prediction == 1 %}danger{% else %}success{% endif %}">
                 <h2>{{ result.label }}</h2>
-                <h1 style="font-size: 3rem; margin: 15px 0;">{{ result.proba_default }}%</h1>
-                <p><strong>Niveau de risque :</strong> {{ result.risque_niveau }}</p>
+                <h1 style="font-size: 3.2rem; margin: 15px 0;">{{ result.proba_default }}%</h1>
+                <p><strong>Niveau :</strong> {{ result.risque_niveau }}</p>
             </div>
             {% endif %}
 
             {% if error %}
-            <div class="error">
-                <strong>Erreur :</strong> {{ error }}
-            </div>
+            <div class="error">{{ error }}</div>
             {% endif %}
         </div>
-
-        <footer>
-            Projet Machine Learning MSDE7 — Pr. Fadil — EHTP 2025/2026
-        </footer>
     </div>
 </body>
 </html>
