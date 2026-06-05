@@ -20,25 +20,22 @@ numerical_cols = pipeline['numerical_cols']
 @app.route('/', methods=['GET', 'POST'])
 def index():
     mode = request.args.get('mode', 'manual')
-    form_data = {}   # Pour garder les valeurs du formulaire
     result = None
     results = None
     error = None
+    form_data = request.form.to_dict() if request.method == 'POST' else {}
 
     if request.method == 'POST':
         try:
-            # ==================== MODE CSV ====================
             if 'file' in request.files and request.files['file'].filename:
                 mode = "csv"
                 file = request.files['file']
                 df = pd.read_csv(file)
-
+                
                 if 'ID' in df.columns: df = df.drop('ID', axis=1)
                 if 'Status' in df.columns: df = df.drop('Status', axis=1)
-                
                 for col in ['Interest_rate_spread', 'rate_of_interest', 'Upfront_charges']:
-                    if col in df.columns:
-                        df = df.drop(col, axis=1)
+                    if col in df.columns: df = df.drop(col, axis=1)
 
                 for col in numerical_cols:
                     if col in df.columns:
@@ -63,12 +60,10 @@ def index():
                 })
                 results = results_df.to_html(classes='table table-striped', index=False)
 
-            # ==================== MODE SAISIE MANUELLE ====================
             else:
                 mode = "manual"
-                form_data = request.form.to_dict()  # Garde toutes les valeurs saisies
-
-                input_data = {
+                # Construction des données
+                input_data = {k: v for k, v in {
                     'year': int(request.form.get('year', 2020)),
                     'loan_limit': request.form.get('loan_limit', 'cf'),
                     'Gender': request.form.get('Gender', 'Male'),
@@ -98,10 +93,10 @@ def index():
                     'Region': request.form.get('Region', 'North'),
                     'Security_Type': request.form.get('Security_Type', 'direct'),
                     'dtir1': float(request.form.get('dtir1', 40.0))
-                }
+                }.items()}
 
                 df_input = pd.DataFrame([input_data])
-
+                
                 for col in categorical_cols:
                     if col in df_input.columns and col in label_encoders:
                         df_input[col] = label_encoders[col].transform(df_input[col].astype(str))
@@ -127,8 +122,7 @@ def index():
                          results=results, 
                          error=error, 
                          mode=mode,
-                         form_data=form_data)   # Important pour sticky form
-
+                         form_data=form_data)
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
