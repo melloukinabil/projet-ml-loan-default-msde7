@@ -135,11 +135,11 @@
                     <div class="form-group"><label>Security_Type</label><select name="Security_Type">{% for v in ['direct','Indriect'] %}<option value="{{v}}" {% if form_data and form_data.Security_Type == v %}selected{% endif %}>{{v}}</option>{% endfor %}</select></div>
                 </div>
 
-                <button type="submit">🔍 Prédire le Risque de Défaut</button>
+                <button type="submit">Prédire le Risque de Défaut de Rembourssement</button>
             </form>
 
             {% if result %}
-            <div class="result {% if result.prediction == 1 %}danger{% else %}success{% endif %}">
+            <div class="result {% if result.prediction == 1 %}danger{% else %}success{% endif %}" id="result-section">
                 <h2>{{ result.label }}</h2>
                 <h1 style="font-size: 3.5rem; margin: 15px 0;">{{ result.proba_default }}%</h1>
                 <p><strong>Niveau :</strong> {{ result.risque_niveau }}</p>
@@ -151,5 +151,18 @@
             {% endif %}
         </div>
     </div>
+    
+    <!-- Script pour scroll automatique vers les résultats -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // Si on a un résultat (après POST), on scroll vers lui
+            if (document.getElementById("result-section")) {
+                document.getElementById("result-section").scrollIntoView({
+                    behavior: "smooth",
+                    block: "center"
+                });
+            }
+        });
+    </script>
 </body>
 </html>
