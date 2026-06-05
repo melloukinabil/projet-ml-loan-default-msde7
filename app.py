@@ -14,7 +14,8 @@ st.set_page_config(
 @st.cache_resource
 def load_pipeline():
     with open('pipeline_loan_default.pkl', 'rb') as f:
-        return pickle.load(f)
+        pipeline = pickle.load(f)
+    return pipeline
 
 pipeline = load_pipeline()
 model = pipeline['model']
@@ -23,6 +24,14 @@ label_encoders = pipeline['label_encoders']
 feature_names = pipeline['feature_names']
 categorical_cols = pipeline['categorical_cols']
 numerical_cols = pipeline['numerical_cols']
+
+# Debug info sidebar
+import sys
+with st.sidebar:
+    st.caption(f"Python {sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}")
+    st.caption(f"Features attendues: {len(feature_names)}")
+    with st.expander("Feature names"):
+        st.write(feature_names)
 
 # Titre
 st.title("\U0001F3E6 Prediction du Defaut de Remboursement - Pret Immobilier")
@@ -116,7 +125,14 @@ if mode == "Saisie manuelle":
                 except ValueError:
                     df_input[col] = 0
         
-        # Reordonner les colonnes
+        # Reordonner les colonnes et verifier
+        missing_cols = [c for c in feature_names if c not in df_input.columns]
+        extra_cols = [c for c in df_input.columns if c not in feature_names]
+        if missing_cols:
+            st.error(f"Colonnes manquantes dans l'input: {missing_cols}")
+            st.stop()
+        if extra_cols:
+            df_input = df_input.drop(columns=extra_cols)
         df_input = df_input[feature_names]
         
         # Normalisation
