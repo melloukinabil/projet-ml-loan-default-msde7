@@ -158,7 +158,7 @@ if mode == "Saisie manuelle":
             st.metric("Confiance", f"{max(proba)*100:.1f}%")
         
         # Barre de probabilite
-        st.progress(proba[1])
+        st.progress(float(proba[1]))
         st.caption(f"Probabilites : Pas de defaut = {proba[0]*100:.1f}% | Defaut = {proba[1]*100:.1f}%")
 
 elif mode == "Upload CSV":
