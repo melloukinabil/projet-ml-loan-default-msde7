@@ -1,3 +1,6 @@
+Je vous fournis le code HTML complet, enrichi avec l'onglet CSV tout en conservant le design original et l'intégralité des champs de saisie manuelle.
+
+```html
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -34,6 +37,36 @@
         }
         header h1 { font-size: 2.3rem; margin-bottom: 8px; }
         .form-container { padding: 40px; }
+
+        /* Onglets */
+        .tabs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+        .tab-btn {
+            padding: 12px 30px;
+            border: 2px solid var(--primary);
+            border-radius: 30px;
+            background: white;
+            color: var(--primary);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .tab-btn.active {
+            background: var(--primary);
+            color: white;
+        }
+        .tab-btn:hover {
+            background: var(--primary-light);
+            color: white;
+            border-color: var(--primary-light);
+        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
         .grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -48,7 +81,7 @@
             font-weight: 600;
             color: #374151;
         }
-        select, input[type="number"] {
+        select, input[type="number"], input[type="file"] {
             width: 100%;
             padding: 12px 14px;
             border: 2px solid #e5e7eb;
@@ -71,6 +104,9 @@
             width: 100%;
             margin-top: 30px;
         }
+        button.csv-btn {
+            background: linear-gradient(135deg, #059669, #10b981);
+        }
         .result {
             margin-top: 35px;
             padding: 30px;
@@ -79,6 +115,36 @@
         }
         .success { background: #ecfdf5; border: 2px solid var(--success); color: #065f46; }
         .danger { background: #fef2f2; border: 2px solid var(--danger); color: #991b1b; }
+        .result-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .result-table th, .result-table td {
+            border: 1px solid #d1d5db;
+            padding: 10px;
+            text-align: center;
+        }
+        .result-table th {
+            background: var(--primary);
+            color: white;
+        }
+        .result-table .defaut { background: #fef2f2; color: #991b1b; }
+        .result-table .non-defaut { background: #ecfdf5; color: #065f46; }
+        .csv-info {
+            background: #f3f4f6;
+            border-left: 4);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .error {
+            color: #991b1b;
+            padding: 15px;
+            background: #fee2e2;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
@@ -89,77 +155,141 @@
         </header>
 
         <div class="form-container">
-            <form action="/predict" method="POST">
-                <div class="grid">
-                    <!-- Champs avec accès sécurisé pour les clés contenant des tirets -->
-                    <div class="form-group">
-                        <label>year</label>
-                        <select name="year">
-                            {% for y in [2019,2020,2021,2022,2023,2024] %}<option value="{{ y }}" {% if form_data and form_data.year == y %}selected{% endif %}>{{ y }}</option>{% endfor %}
-                        </select>
-                    </div>
-                    <div class="form-group"><label>loan_limit</label><select name="loan_limit">{% for v in ['cf','ncf'] %}<option value="{{v}}" {% if form_data and form_data.loan_limit == v %}selected{% endif %}>{{v}}</option>{% endfor %}</select></div>
-                    <div class="form-group"><label>Gender</label><select name="Gender">{% for v in ['Male','Female','Sex Not Available','Joint'] %}<option value="{{v}}" {% if form_data and form_data.Gender == v %}selected{% endif %}>{{v}}</option>{% endfor %}</select></div>
-                    <div class="form-group"><label>approv_in_adv</label><select name="approv_in_adv">{% for v in ['pre','nopre'] %}<option value="{{v}}" {% if form_data and form_data.approv_in_adv == v %}selected{% endif %}>{{v}}</option>{% endfor %}</select></div>
-                    <div class="form-group"><label>loan_type</label><select name="loan_type">{% for v in ['type1','type2','type3'] %}<option value="{{v}}" {% if form_data and form_data.loan_type == v %}selected{% endif %}>{{v}}</option>{% endfor %}</select></div>
-                    <div class="form-group"><label>loan_purpose</label><select name="loan_purpose">{% for v in ['p1','p2','p3','p4'] %}<option value="{{v}}" {% if form_data and form_data.loan_purpose == v %}selected{% endif %}>{{v}}</option>{% endfor %}</select></div>
-                    <div class="form-group"><label>Credit_Worthiness</label><select name="Credit_Worthiness">{% for v in ['l1','l2'] %}<option value="{{v}}" {% if form_data and form_data.Credit_Worthiness == v %}selected{% endif %}>{{v}}</option>{% endfor %}</select></div>
-                    <div class="form-group"><label>open_credit</label><select name="open_credit">{% for v in ['nopc','opc'] %}<option value="{{v}}" {% if form_data and form_data.open_credit == v %}selected{% endif %}>{{v}}</option>{% endfor %}</select></div>
-                    <div class="form-group"><label>business_or_commercial</label><select name="business_or_commercial">{% for v in ['nob/c','b/c'] %}<option value="{{v}}" {% if form_data and form_data.business_or_commercial == v %}selected{% endif %}>{{v}}</option>{% endfor %}</select></div>
+            <!-- Onglets -->
+            <div class="tabs">
+                <button class="tab-btn {% if mode != 'csv' %}active{% endif %}" onclick="switchTab('manual')">Saisie Manuelle</button>
+                <button class="tab-btn {% if mode == 'csv' %}active{% endif %}" onclick="switchTab('csv')">Upload CSV</button>
+            </div>
 
-                    <div class="form-group"><label>loan_amount</label><input type="number" name="loan_amount" value="{{ form_data.loan_amount if form_data else 200000 }}"></div>
-                    <div class="form-group"><label>term</label><input type="number" name="term" value="{{ form_data.term if form_data else 360 }}"></div>
-                    <div class="form-group"><label>property_value</label><input type="number" name="property_value" value="{{ form_data.property_value if form_data else 250000 }}"></div>
-                    <div class="form-group"><label>income</label><input type="number" name="income" value="{{ form_data.income if form_data else 5000 }}"></div>
-                    <div class="form-group"><label>Credit_Score</label><input type="number" name="Credit_Score" value="{{ form_data.Credit_Score if form_data else 700 }}"></div>
-                    <div class="form-group"><label>LTV</label><input type="number" step="0.1" name="LTV" value="{{ form_data.LTV if form_data else 80.0 }}"></div>
-                    <div class="form-group"><label>dtir1</label><input type="number" step="0.1" name="dtir1" value="{{ form_data.dtir1 if form_data else 40.0 }}"></div>
+            <!-- Formulaire Saisie Manuelle -->
+            <div id="tab-manual" class="tab-content {% if mode != 'csv' %}active{% endif %}">
+                <form action="/predict" method="POST">
+                    <input type="hidden" name="input_mode" value="manual">
+                    <div class="grid">
+                        <div class="form-group">
+                            <label>year</label>
+                            <select name="year">
+                                {% for y in [2019,2020,2021,2022,2023,2024] %}<option value="{{ y }}" {% if form_data and form_data.year == y %}selected{% endif %}>{{ y }}</option>{% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group"><label>loan_limit</label><select name="loan_limit">{% for v in ['cf','ncf'] %}<option value="{{v}}" {% if form_data and form_data.loan_limit == v %}selected{% endif %}>{{v}}</option>{% endfor %}</select></div>
+                        <div class="form-group"><label>Gender</label><select name="Gender">{% for v in ['Male','Female','Sex Not Available','Joint'] %}<option value="{{v}}" {% if form_data and form_data.Gender == v %}selected{% endif %}>{{v}}</option>{% endfor %}</select></div>
+                        <div class="form-group"><label>approv_in_adv</label><select name="approv_in_adv">{% for v in ['pre','nopre'] %}<option value="{{v}}" {% if form_data and form_data.approv_in_adv == v %}selected{% endif %}>{{v}}</option>{% endfor %}</select></div>
+                        <div class="form-group"><label>loan_type</label><select name="loan_type">{% for v in ['type1','type2','type3'] %}<option value="{{v}}" {% if form_data and form_data.loan_type == v %}selected{% endif %}>{{v}}</option>{% endfor %}</select></div>
+                        <div class="form-group"><label>loan_purpose</label><select name="loan_purpose">{% for v in ['p1','p2','p3','p4'] %}<option value="{{v}}" {% if form_data and form_data.loan_purpose == v %}selected{% endif %}>{{v}}</option>{% endfor %}</select></div>
+                        <div class="form-group"><label>Credit_Worthiness</label><select name="Credit_Worthiness">{% for v in ['l1','l2'] %}<option value="{{v}}" {% if form_data and form_data.Credit_Worthiness == v %}selected{% endif %}>{{v}}</option>{% endfor %}</select></div>
+                        <div class="form-group"><label>open_credit</label><select name="open_credit">{% for v in ['nopc','opc'] %}<option value="{{v}}" {% if form_data and form_data.open_credit == v %}selected{% endif %}>{{v}}</option>{% endfor %}</select></div>
+                        <div class="form-group"><label>business_or_commercial</label><select name="business_or_commercial">{% for v in ['nob/c','b/c'] %}<option value="{{v}}" {% if form_data and form_data.business_or_commercial == v %}selected{% endif %}>{{v}}</option>{% endfor %}</select></div>
+                        <div class="form-group"><label>loan_amount</label><input type="number" name="loan_amount" value="{{ form_data.loan_amount if form_data else 200000 }}"></div>
+                        <div class="form-group"><label>term</label><input type="number" name="term" value="{{ form_data.term if form_data else 360 }}"></div>
+                        <div class="form-group"><label>property_value</label><input type="number" name="property_value" value="{{ form_data.property_value if form_data else 250000 }}"></div>
+                        <div class="form-group"><label>income</label><input type="number" name="income" value="{{ form_data.income if form_data else 5000 }}"></div>
+                        <div class="form-group"><label>Credit_Score</label><input type="number" name="Credit_Score" value="{{ form_data.Credit_Score if form_data else 700 }}"></div>
+                        <div class="form-group"><label>LTV</label><input type="number" step="0.1" name="LTV" value="{{ form_data.LTV if form_data else 80.0 }}"></div>
+                        <div class="form-group"><label>dtir1</label><input type="number" step="0.1" name="dtir1" value="{{ form_data.dtir1 if form_data else 40.0 }}"></div>
 
-                    <div class="form-group"><label>Neg_ammortization</label><select name="Neg_ammortization">{% for v in ['not_neg','neg_amm'] %}<option value="{{v}}" {% if form_data and form_data.Neg_ammortization == v %}selected{% endif %}>{{v}}</option>{% endfor %}</select></div>
-                    <div class="form-group"><label>interest_only</label><select name="interest_only">{% for v in ['not_int','int_only'] %}<option value="{{v}}" {% if form_data and form_data.interest_only == v %}selected{% endif %}>{{v}}</option>{% endfor %}</select></div>
-                    <div class="form-group"><label>lump_sum_payment</label><select name="lump_sum_payment">{% for v in ['not_lpsm','lpsm'] %}<option value="{{v}}" {% if form_data and form_data.lump_sum_payment == v %}selected{% endif %}>{{v}}</option>{% endfor %}</select></div>
-                    <div class="form-group"><label>construction_type</label><select name="construction_type">{% for v in ['sb','mh'] %}<option value="{{v}}" {% if form_data and form_data.construction_type == v %}selected{% endif %}>{{v}}</option>{% endfor %}</select></div>
-                    <div class="form-group"><label>occupancy_type</label><select name="occupancy_type">{% for v in ['pr','sr','ir'] %}<option value="{{v}}" {% if form_data and form_data.occupancy_type == v %}selected{% endif %}>{{v}}</option>{% endfor %}</select></div>
-                    <div class="form-group"><label>Secured_by</label><select name="Secured_by">{% for v in ['home','land'] %}<option value="{{v}}" {% if form_data and form_data.Secured_by == v %}selected{% endif %}>{{v}}</option>{% endfor %}</select></div>
-                    <div class="form-group"><label>total_units</label><select name="total_units">{% for v in ['1U','2U','3U','4U'] %}<option value="{{v}}" {% if form_data and form_data.total_units == v %}selected{% endif %}>{{v}}</option>{% endfor %}</select></div>
-                    <div class="form-group"><label>credit_type</label><select name="credit_type">{% for v in ['EXP','EQUI','CRIF','CIB'] %}<option value="{{v}}" {% if form_data and form_data.credit_type == v %}selected{% endif %}>{{v}}</option>{% endfor %}</select></div>
-                    <div class="form-group"><label>co-applicant_credit_type</label>
-                        <select name="co-applicant_credit_type">
-                            <option value="CIB" {% if form_data and form_data['co-applicant_credit_type'] == 'CIB' %}selected{% endif %}>CIB</option>
-                            <option value="EXP" {% if form_data and form_data['co-applicant_credit_type'] == 'EXP' %}selected{% endif %}>EXP</option>
-                        </select>
+                        <div class="form-group"><label>Neg_ammortization</label><select name="Neg_ammortization">{% for v in ['not_neg','neg_amm'] %}<option value="{{v}}" {% if form_data and form_data.Neg_ammortization == v %}selected{% endif %}>{{v}}</option>{% endfor %}</select></div>
+                        <div class="form-group"><label>interest_only</label><select name="interest_only">{% for v in ['not_int','int_only'] %}<option value="{{v}}" {% if form_data and form_data.interest_only == v %}selected{% endif %}>{{v}}</option>{% endfor %}</select></div>
+                        <div class="form-group"><label>lump_sum_payment</label><select name="lump_sum_payment">{% for v in ['not_lpsm','lpsm'] %}<option value="{{v}}" {% if form_data and form_data.lump_sum_payment == v %}selected{% endif %}>{{v}}</option>{% endfor %}</select></div>
+                        <div class="form-group"><label>construction_type</label><select name="construction_type">{% for v in ['sb','mh'] %}<option value="{{v}}" {% if form_data and form_data.construction_type == v %}selected{% endif %}>{{v}}</option>{% endfor %}</select></div>
+                        <div class="form-group"><label>occupancy_type</label><select name="occupancy_type">{% for v in ['pr','sr','ir'] %}<option value="{{v}}" {% if form_data and form_data.occupancy_type == v %}selected{% endif %}>{{v}}</option>{% endfor %}</select></div>
+                        <div class="form-group"><label>Secured_by</label><select name="Secured_by">{% for v in ['home','land'] %}<option value="{{v}}" {% if form_data and form_data.Secured_by == v %}selected{% endif %}>{{v}}</option>{% endfor %}</select></div>
+                        <div class="form-group"><label>total_units</label><select name="total_units">{% for v in ['1U','2U','3U','4U'] %}<option value="{{v}}" {% if form_data and form_data.total_units == v %}selected{% endif %}>{{v}}</option>{% endfor %}</select></div>
+                        <div class="form-group"><label>credit_type</label><select name="credit_type">{% for v in ['EXP','EQUI','CRIF','CIB'] %}<option value="{{v}}" {% if form_data and form_data.credit_type == v %}selected{% endif %}>{{v}}</option>{% endfor %}</select></div>
+                        <div class="form-group"><label>co-applicant_credit_type</label>
+                            <select name="co-applicant_credit_type">
+                                <option value="CIB" {% if form_data and form_data['co-applicant_credit_type'] == 'CIB' %}selected{% endif %}>CIB</option>
+                                <option value="EXP" {% if form_data and form_data['co-applicant_credit_type'] == 'EXP' %}selected{% endif %}>EXP</option>
+                            </select>
+                        </div>
+                        <div class="form-group"><label>age</label><select name="age">{% for v in ['<25','25-34','35-44','45-54','55-64','65-74','>74'] %}<option value="{{v}}" {% if form_data and form_data.age == v %}selected{% endif %}>{{v}}</option>{% endfor %}</select></div>
+                        <div class="form-group"><label>submission_of_application</label><select name="submission_of_application">{% for v in ['to_inst','not_inst'] %}<option value="{{v}}" {% if form_data and form_data.submission_of_application == v %}selected{% endif %}>{{v}}</option>{% endfor %}</select></div>
+                        <div class="form-group"><label>Region</label><select name="Region">{% for v in ['North','south','central','North-East'] %}<option value="{{v}}" {% if form_data and form_data.Region == v %}selected{% endif %}>{{v}}</option>{% endfor %}</select></div>
+                        <div class="form-group"><label>Security_Type</label><select name="Security_Type">{% for v in ['direct','Indriect'] %}<option value="{{v}}" {% if form_data and form_data.Security_Type == v %}selected{% endif %}>{{v}}</option>{% endfor %}</select></div>
                     </div>
-                    <div class="form-group"><label>age</label><select name="age">{% for v in ['<25','25-34','35-44','45-54','55-64','65-74','>74'] %}<option value="{{v}}" {% if form_data and form_data.age == v %}selected{% endif %}>{{v}}</option>{% endfor %}</select></div>
-                    <div class="form-group"><label>submission_of_application</label><select name="submission_of_application">{% for v in ['to_inst','not_inst'] %}<option value="{{v}}" {% if form_data and form_data.submission_of_application == v %}selected{% endif %}>{{v}}</option>{% endfor %}</select></div>
-                    <div class="form-group"><label>Region</label><select name="Region">{% for v in ['North','south','central','North-East'] %}<option value="{{v}}" {% if form_data and form_data.Region == v %}selected{% endif %}>{{v}}</option>{% endfor %}</select></div>
-                    <div class="form-group"><label>Security_Type</label><select name="Security_Type">{% for v in ['direct','Indriect'] %}<option value="{{v}}" {% if form_data and form_data.Security_Type == v %}selected{% endif %}>{{v}}</option>{% endfor %}</select></div>
+                    <button type="submit">Prédire le Risque de Défaut (Saisie Manuelle)</button>
+                </form>
+            </div>
+
+            <!-- Upload CSV -->
+            <div id="tab-csv" class="tab-content {% if mode == 'csv' %}active{% endif %}">
+                <div class="csv-info" style="background:#f3f4f6; border-left:4px solid var(--primary); padding:15px; border-radius:8px; margin-bottom:20px;">
+                    <i class="fas fa-info-circle" style="color: var(--primary);"></i>
+                    Le fichier CSV doit contenir toutes les colonnes nécessaires (voir les champs du formulaire manuel). 
+                    Vous pouvez télécharger un <a href="/sample-csv" style="color: var(--primary);">fichier exemple</a>.
                 </div>
+                <form action="/predict" method="POST" enctype="multipart/form-data">
+                    <input type="hidden" name="input_mode" value="csv">
+                    <div class="form-group">
+                        <label>Sélectionnez un fichier CSV</label>
+                        <input type="file" name="file" accept=".csv" required>
+                    </div>
+                    <button type="submit" class="csv-btn">Lancer les Prédictions sur le CSV</button>
+                </form>
 
-                <button type="submit">Prédire le Risque de Défaut de Rembourssement</button>
-            </form>
+                {% if results %}
+                <div style="margin-top: 40px;">
+                    <h3>Résultats des Prédictions ({{ results|length }} lignes)</h3>
+                    <div style="overflow-x: auto;">
+                        <table class="result-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Statut</th>
+                                    <th>Probabilité Défaut</th>
+                                    <th>Niveau de Risque</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for r in results %}
+                                <tr class="{% if r.prediction == 1 %}defaut{% else %}non-defaut{% endif %}">
+                                    <td>{{ loop.index }}</td>
+                                    <td>{{ r.label }}</td>
+                                    <td>{{ r.proba_default }}%</td>
+                                    <td>{{ r.risque_niveau }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
 
-            {% if result %}
+            <!-- Résultat pour la saisie manuelle -->
+            {% if result and mode != 'csv' %}
             <div class="result {% if result.prediction == 1 %}danger{% else %}success{% endif %}" id="result-section">
                 <h2>{{ result.label }}</h2>
-                <h1 style="font-size: 3.5rem; margin: 15px 0;">{{ result.proba_default }}%</h1>
+                <h1 style="font-size: 3.5rem; margin: 15px 0;">{{ result.proba }}%</h1>
                 <p><strong>Niveau :</strong> {{ result.risque_niveau }}</p>
             </div>
             {% endif %}
 
             {% if error %}
-            <div class="error" style="color:red; padding:15px; background:#fee2e2; border-radius:8px;">{{ error }}</div>
+            <div class="error">{{ error }}</div>
             {% endif %}
         </div>
     </div>
-    
-    <!-- Script pour scroll automatique vers les résultats -->
+
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            // Si on a un résultat (après POST), on scroll vers lui
+        // Fonction pour basculer entre les onglets
+        function switchTab(tab) {
+            // Masquer tous les contenus
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            // Désactiver tous les boutons
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            // Afficher le contenu sélectionné
+            document.getElementById('tab-' + tab).classList.add('active            // Activer le bouton correspondant
+            document.querySelectorAll('.tab-btn').forEach( => {
+                if (btn.textContent.trim().toLowerCase().includes(tab === 'manual' ?saisie' : 'csv')) {
+                    btn.classList.add('active');
+                }
+            });
+               // Scroll automatique vers les résultats si présents
+        document.addEventListener("DOMContentLoaded", function {
             if (document.getElementById("result-section")) {
-                document.getElementById("result-section").scrollIntoView({
-                    behavior: "smooth",
-                    block: "center"
+                document.getElementById("result-section").scrollIntoView                    behavior: "smooth",
+                    block: ""
                 });
             }
         });
