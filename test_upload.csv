@@ -1,0 +1,6 @@
+year,loan_limit,Gender,approv_in_adv,loan_type,loan_purpose,Credit_Worthiness,open_credit,business_or_commercial,loan_amount,term,Neg_ammortization,interest_only,lump_sum_payment,property_value,construction_type,occupancy_type,Secured_by,total_units,income,credit_type,Credit_Score,co-applicant_credit_type,age,submission_of_application,LTV,Region,Security_Type,dtir1
+2019,cf,Male,pre,type1,p1,l1,nopc,nob/c,200000,360,not_neg,not_int,not_lpsm,250000,sb,pr,home,1U,5000,EXP,750,CIB,35-44,to_inst,80.0,North,direct,35.0
+2020,ncf,Female,nopre,type2,p2,l2,opc,b/c,350000,240,not_neg,not_int,not_lpsm,400000,sb,pr,home,1U,3000,CIB,580,EXP,25-34,not_inst,87.5,south,Indriect,55.0
+2021,cf,Male,pre,type1,p3,l1,nopc,nob/c,150000,360,not_neg,not_int,not_lpsm,180000,mh,sr,land,2U,7000,EQUI,800,CIB,45-54,to_inst,83.3,central,direct,28.0
+2022,cf,Joint,nopre,type3,p4,l2,opc,nob/c,500000,480,neg_amm,int_only,lpsm,450000,sb,ir,home,1U,2500,CRIF,520,EXP,55-64,not_inst,111.1,North-East,Indriect,62.0
+2020,ncf,Sex Not Available,pre,type2,p1,l1,nopc,nob/c,280000,300,not_neg,not_int,not_lpsm,320000,sb,pr,home,1U,6000,EXP,700,CIB,<25,to_inst,87.5,North,direct,42.0

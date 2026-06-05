@@ -5,8 +5,8 @@ import pickle
 
 # Configuration de la page
 st.set_page_config(
-    page_title="Prediction Defaut Pret Immobilier",
-    page_icon="\U0001F3E6",
+    page_title="EHTP - Prediction Defaut Pret Immobilier",
+    page_icon="logo_ehtp.jpg",
     layout="wide"
 )
 
@@ -28,13 +28,19 @@ numerical_cols = pipeline['numerical_cols']
 # Debug info sidebar
 import sys
 with st.sidebar:
+    st.image("logo_ehtp.jpg", use_container_width=True)
     st.caption(f"Python {sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}")
     st.caption(f"Features attendues: {len(feature_names)}")
     with st.expander("Feature names"):
         st.write(feature_names)
 
-# Titre
-st.title("\U0001F3E6 Prediction du Defaut de Remboursement - Pret Immobilier")
+# Logo + Titre
+col_logo, col_title = st.columns([1, 4])
+with col_logo:
+    st.image("logo_ehtp.jpg", width=150)
+with col_title:
+    st.title("Prediction du Defaut de Remboursement - Pret Immobilier")
+    st.markdown("*Projet Machine Learning - MSDE7 | Ecole Hassania des Travaux Publics*")
 st.markdown("Application de prediction basee sur un modele de Machine Learning entraine sur 148 670 dossiers de prets.")
 st.markdown("---")
 
