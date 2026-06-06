@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, send_from_directory
 import pandas as pd
 import pickle
 
@@ -128,6 +128,11 @@ def index():
     if mode not in ('manual', 'upload'):
         mode = 'manual'
     return render_template('index.html', mode=mode)
+
+
+@app.route('/logo_ehtp.jpg')
+def logo_ehtp():
+    return send_from_directory(app.root_path, 'logo_ehtp.jpg')
 
 
 @app.route('/predict', methods=['POST'])
