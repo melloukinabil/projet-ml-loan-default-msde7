@@ -1,103 +1,233 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, jsonify
 import pandas as pd
 import pickle
-import os
-import traceback
 
 app = Flask(__name__)
-app.config['JSON_AS_ASCII'] = False
 
 # Chargement du pipeline
-pipeline = None
-try:
-    with open('pipeline_loan_default.pkl', 'rb') as f:
-        pipeline = pickle.load(f)
-    print("✅ Pipeline chargé avec succès")
-except Exception as e:
-    print(f"❌ Erreur pipeline: {e}")
+with open('pipeline_loan_default.pkl', 'rb') as f:
+    pipeline = pickle.load(f)
 
-model = pipeline['model'] if pipeline else None
-scaler = pipeline.get('scaler')
-label_encoders = pipeline.get('label_encoders')
-feature_names = pipeline.get('feature_names', [])
-categorical_cols = pipeline.get('categorical_cols', [])
+model = pipeline['model']
+scaler = pipeline['scaler']
+label_encoders = pipeline['label_encoders']
+feature_names = pipeline['feature_names']
+categorical_cols = pipeline['categorical_cols']
+numerical_cols = pipeline['numerical_cols']
+
+
+def _risk_level(prob_default):
+    if prob_default >= 0.75:
+        return 'Tres eleve'
+    if prob_default >= 0.50:
+        return 'Eleve'
+    if prob_default >= 0.25:
+        return 'Modere'
+    return 'Faible'
+
+
+def preprocess_input(data_dict):
+    """Pretraitement d'un dictionnaire de features pour la prediction."""
+    df_input = pd.DataFrame([data_dict])
+    
+    for col in categorical_cols:
+        if col in df_input.columns:
+            try:
+                df_input[col] = label_encoders[col].transform(df_input[col].astype(str))
+            except (ValueError, KeyError):
+                df_input[col] = 0
+    
+    missing_cols = [c for c in feature_names if c not in df_input.columns]
+    if missing_cols:
+        raise ValueError(f"Colonnes manquantes dans l'input: {missing_cols}")
+    extra_cols = [c for c in df_input.columns if c not in feature_names]
+    if extra_cols:
+        df_input = df_input.drop(columns=extra_cols)
+
+    df_input = df_input[feature_names]
+    X_input = scaler.transform(df_input)
+    return X_input
+
+
+def preprocess_batch(df_upload):
+    """Pretraitement batch conforme a la logique de l'app Streamlit."""
+    df_clean = df_upload.copy()
+
+    if 'ID' in df_clean.columns:
+        df_clean = df_clean.drop('ID', axis=1)
+    if 'Status' in df_clean.columns:
+        df_clean = df_clean.drop('Status', axis=1)
+
+    for c in ['Interest_rate_spread', 'rate_of_interest', 'Upfront_charges']:
+        if c in df_clean.columns:
+            df_clean = df_clean.drop(c, axis=1)
+
+    for col in numerical_cols:
+        if col in df_clean.columns:
+            df_clean[col] = df_clean[col].fillna(df_clean[col].median())
+    for col in categorical_cols:
+        if col in df_clean.columns and not df_clean[col].mode().empty:
+            df_clean[col] = df_clean[col].fillna(df_clean[col].mode()[0])
+
+    for col in categorical_cols:
+        if col in df_clean.columns:
+            try:
+                df_clean[col] = label_encoders[col].transform(df_clean[col].astype(str))
+            except (ValueError, KeyError):
+                df_clean[col] = 0
+
+    missing_cols = [c for c in feature_names if c not in df_clean.columns]
+    if missing_cols:
+        raise ValueError(f"Colonnes manquantes dans le CSV: {missing_cols}")
+
+    extra_cols = [c for c in df_clean.columns if c not in feature_names]
+    if extra_cols:
+        df_clean = df_clean.drop(columns=extra_cols)
+
+    df_clean = df_clean[feature_names]
+    return scaler.transform(df_clean)
+
+
+def get_manual_form_data(form):
+    return {
+        'year': int(form.get('year', 2024)),
+        'loan_limit': form.get('loan_limit', 'cf'),
+        'Gender': form.get('Gender', 'Male'),
+        'approv_in_adv': form.get('approv_in_adv', 'nopre'),
+        'loan_type': form.get('loan_type', 'type1'),
+        'loan_purpose': form.get('loan_purpose', 'p1'),
+        'Credit_Worthiness': form.get('Credit_Worthiness', 'l1'),
+        'open_credit': form.get('open_credit', 'nopc'),
+        'business_or_commercial': form.get('business_or_commercial', 'nob/c'),
+        'loan_amount': float(form.get('loan_amount', 200000)),
+        'term': float(form.get('term', 360)),
+        'Neg_ammortization': form.get('Neg_ammortization', 'not_neg'),
+        'interest_only': form.get('interest_only', 'not_int'),
+        'lump_sum_payment': form.get('lump_sum_payment', 'not_lpsm'),
+        'property_value': float(form.get('property_value', 250000)),
+        'construction_type': form.get('construction_type', 'sb'),
+        'occupancy_type': form.get('occupancy_type', 'pr'),
+        'Secured_by': form.get('Secured_by', 'home'),
+        'total_units': form.get('total_units', '1U'),
+        'income': float(form.get('income', 5000)),
+        'credit_type': form.get('credit_type', 'EXP'),
+        'Credit_Score': int(form.get('Credit_Score', 700)),
+        'co-applicant_credit_type': form.get('co-applicant_credit_type', 'CIB'),
+        'age': form.get('age', '35-44'),
+        'submission_of_application': form.get('submission_of_application', 'to_inst'),
+        'LTV': float(form.get('LTV', 80)),
+        'Region': form.get('Region', 'North'),
+        'Security_Type': form.get('Security_Type', 'direct'),
+        'dtir1': float(form.get('dtir1', 40))
+    }
 
 
 @app.route('/')
 def index():
-    return render_template('index.html', result=None, error=None, form_data=None)
+    mode = request.args.get('mode', 'manual')
+    if mode not in ('manual', 'upload'):
+        mode = 'manual'
+    return render_template('index.html', mode=mode)
 
 
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
-        if model is None:
-            raise Exception("Modèle non chargé")
-
-        # Récupération des données (noms exacts du formulaire)
-        data = {
-            'year': int(request.form.get('year', 2020)),
-            'loan_limit': request.form.get('loan_limit'),
-            'Gender': request.form.get('Gender'),
-            'approv_in_adv': request.form.get('approv_in_adv'),
-            'loan_type': request.form.get('loan_type'),
-            'loan_purpose': request.form.get('loan_purpose'),
-            'Credit_Worthiness': request.form.get('Credit_Worthiness'),
-            'open_credit': request.form.get('open_credit'),
-            'business_or_commercial': request.form.get('business_or_commercial'),
-            'loan_amount': float(request.form.get('loan_amount', 200000)),
-            'term': float(request.form.get('term', 360)),
-            'Neg_ammortization': request.form.get('Neg_ammortization'),
-            'interest_only': request.form.get('interest_only'),
-            'lump_sum_payment': request.form.get('lump_sum_payment'),
-            'property_value': float(request.form.get('property_value', 250000)),
-            'construction_type': request.form.get('construction_type'),
-            'occupancy_type': request.form.get('occupancy_type'),
-            'Secured_by': request.form.get('Secured_by'),
-            'total_units': request.form.get('total_units'),
-            'income': float(request.form.get('income', 5000)),
-            'credit_type': request.form.get('credit_type'),
-            'Credit_Score': int(request.form.get('Credit_Score', 700)),
-            'co-applicant_credit_type': request.form.get('co-applicant_credit_type'),
-            'age': request.form.get('age'),
-            'submission_of_application': request.form.get('submission_of_application'),
-            'LTV': float(request.form.get('LTV', 80.0)),
-            'Region': request.form.get('Region'),
-            'Security_Type': request.form.get('Security_Type'),
-            'dtir1': float(request.form.get('dtir1', 40.0))
-        }
-
-        # Prétraitement
-        df_input = pd.DataFrame([data])
-
-        for col in categorical_cols:
-            if col in df_input.columns and col in label_encoders:
-                try:
-                    df_input[col] = label_encoders[col].transform(df_input[col].astype(str))
-                except:
-                    df_input[col] = 0
-
-        df_input = df_input.reindex(columns=feature_names, fill_value=0)
-        X_input = scaler.transform(df_input)
-
-        prediction = int(model.predict(X_input)[0])
-        proba = float(model.predict_proba(X_input)[0][1])
-
+        data = get_manual_form_data(request.form)
+        
+        X_input = preprocess_input(data)
+        prediction = model.predict(X_input)[0]
+        proba = model.predict_proba(X_input)[0]
+        prob_default = float(proba[1])
+        
         result = {
-            'prediction': prediction,
-            'label': 'DEFAUT' if prediction == 1 else 'PAS DE DEFAUT',
-            'proba_default': round(proba * 100, 2),
-            'risque_niveau': 'Très élevé' if proba >= 0.75 else 'Élevé' if proba >= 0.5 else 'Modéré' if proba >= 0.25 else 'Faible'
+            'prediction': int(prediction),
+            'label': 'Defaut' if prediction == 1 else 'Pas de defaut',
+            'proba_no_default': round(float(proba[0]) * 100, 2),
+            'proba_default': round(prob_default * 100, 2),
+            'risque_niveau': _risk_level(prob_default),
+            'commentaire': (
+                f"Le modele penche vers le defaut ({prob_default * 100:.1f}%), "
+                f"marge {'faible' if prob_default < 0.6 else 'claire'}."
+                if prob_default > 0.5
+                else f"Le modele penche vers le remboursement normal ({(1 - prob_default) * 100:.1f}% de confiance)."
+            )
+        }
+        
+        return render_template('index.html', result=result, form_data=data, mode='manual')
+        
+    except Exception as e:
+        return render_template('index.html', error=str(e), mode='manual')
+
+
+@app.route('/predict-batch', methods=['POST'])
+def predict_batch():
+    try:
+        if 'csv_file' not in request.files:
+            raise ValueError('Aucun fichier recu. Veuillez choisir un CSV.')
+
+        uploaded_file = request.files['csv_file']
+        if uploaded_file.filename == '':
+            raise ValueError('Aucun fichier selectionne.')
+        if not uploaded_file.filename.lower().endswith('.csv'):
+            raise ValueError('Le fichier doit etre au format CSV.')
+
+        df_upload = pd.read_csv(uploaded_file)
+        if df_upload.empty:
+            raise ValueError('Le fichier CSV est vide.')
+
+        X_upload = preprocess_batch(df_upload)
+        predictions = model.predict(X_upload)
+        probas = model.predict_proba(X_upload)[:, 1]
+
+        results_df = pd.DataFrame({
+            'Prediction': ['Defaut' if p == 1 else 'Pas de defaut' for p in predictions],
+            'Probabilite_Defaut (%)': (probas * 100).round(2)
+        })
+
+        summary = {
+            'rows': int(df_upload.shape[0]),
+            'cols': int(df_upload.shape[1]),
+            'default_count': int(predictions.sum()),
+            'default_rate': round(float(predictions.mean()) * 100, 2),
+            'avg_risk': round(float(probas.mean()) * 100, 2)
         }
 
-        return render_template('index.html', result=result, form_data=data, error=None)
+        preview_rows = min(len(results_df), 25)
+        batch_preview = results_df.head(preview_rows).to_dict(orient='records')
 
+        return render_template(
+            'index.html',
+            mode='upload',
+            batch_summary=summary,
+            batch_preview=batch_preview,
+            batch_preview_rows=preview_rows,
+            batch_total_rows=len(results_df)
+        )
     except Exception as e:
-        print("ERREUR /predict:")
-        print(traceback.format_exc())
-        return render_template('index.html', result=None, form_data=None, error=str(e))
+        return render_template('index.html', error=str(e), mode='upload')
+
+
+@app.route('/api/predict', methods=['POST'])
+def api_predict():
+    """API REST pour la prediction."""
+    try:
+        data = request.get_json()
+        X_input = preprocess_input(data)
+        prediction = model.predict(X_input)[0]
+        proba = model.predict_proba(X_input)[0]
+        
+        prob_default = float(proba[1])
+        return jsonify({
+            'prediction': int(prediction),
+            'label': 'Defaut' if prediction == 1 else 'Pas de defaut',
+            'proba_no_default': round(float(proba[0]), 4),
+            'proba_default': round(prob_default, 4),
+            'risque_niveau': _risk_level(prob_default)
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
 
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port)
+    app.run(debug=True, port=5000)
